@@ -18,8 +18,11 @@ def home():
 # ================= GROQ CLIENT =================
 def get_groq_client():
     api_key = os.getenv("GROQ_API_KEY")
+    print("API KEY LOADED:", api_key)  # 🔥 DEBUG
+
     if not api_key:
         raise Exception("GROQ_API_KEY not set")
+
     return Groq(api_key=api_key)
 
 
@@ -28,7 +31,6 @@ def init_db():
     conn = sqlite3.connect("chat.db")
     c = conn.cursor()
 
-    # users table
     c.execute("""
     CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +39,6 @@ def init_db():
     )
     """)
 
-    # chats table
     c.execute("""
     CREATE TABLE IF NOT EXISTS chats(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -175,12 +176,14 @@ def chat():
     try:
         client = get_groq_client()
 
+        print("Making request to Groq...")  # 🔥 DEBUG
+
         response = client.chat.completions.create(
-            model="llama3-70b-8192",  # ✅ stable model
+            model="llama3-8b-8192",  # ✅ safe model
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a kind emotional support AI. Keep responses short, natural, and supportive."
+                    "content": "You are a kind emotional support AI. Keep responses short and supportive."
                 },
                 {
                     "role": "user",
@@ -190,10 +193,12 @@ def chat():
             temperature=0.7
         )
 
+        print("Groq response received")  # 🔥 DEBUG
+
         reply = response.choices[0].message.content
 
     except Exception as e:
-        print("ERROR:", str(e))  # 👈 shows in Render logs
+        print("ERROR:", str(e))  # 🔥 VERY IMPORTANT
         reply = "⚠️ AI is temporarily unavailable. Please try again."
 
     # 💾 Save bot reply
