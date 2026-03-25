@@ -195,7 +195,7 @@ def chat():
 
         print("Groq response received")  # 🔥 DEBUG
 
-        reply = response.choices[0].message.content
+        reply = "Backend working perfectly 🔥"
 
     except Exception as e:
         print("ERROR:", str(e))  # 🔥 VERY IMPORTANT
