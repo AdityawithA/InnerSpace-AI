@@ -1,1 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>InnerSpace</title>
 
+<style>
+body {
+  margin:0;
+  font-family:'Segoe UI';
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+}
+
+/* GLASS */
+#auth, .header, .input {
+  backdrop-filter: blur(10px);
+  background: rgba(30,41,59,0.6);
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+/* LOGIN */
+#auth {
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  padding:30px;
+  border-radius:15px;
+  text-align:center;
+  width:300px;
+}
+
+/* INPUT */
+input, textarea {
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:8px;
+  border:none;
+}
+
+/* BUTTON */
+button {
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:8px;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+}
+
+/* APP */
+#app { display:none; height:100vh; flex-direction:column; }
+
+.header { padding:10px; }
+
+.messages {
+  flex:1;
+  padding:10px;
+  overflow-y:auto;
+}
+
+/* CHAT */
+.row { display:flex; margin:5px 0; }
+.user { justify-content:flex-end; }
+.bot { justify-content:flex-start; }
+
+.bubble {
+  max-width:70%;
+  padding:10px;
+  border-radius:10px;
+  animation:fadeIn 0.3s ease;
+}
+
+.user .bubble { background:#2563eb; }
+.bot .bubble { background:#334155; }
+
+@keyframes fadeIn {
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.time {
+  font-size:10px;
+  opacity:0.6;
+}
+
+/* reactions */
+.reactions { font-size:12px; }
+
+/* typing */
+.typing { display:flex; gap:4px; }
+.dot {
+  width:6px;height:6px;
+  background:#ccc;
+  border-radius:50%;
+  animation:blink 1.4s infinite;
+}
+.dot:nth-child(2){animation-delay:0.2s;}
+.dot:nth-child(3){animation-delay:0.4s;}
+
+@keyframes blink {
+  0%{opacity:0.2;}
+  20%{opacity:1;}
+  100%{opacity:0.2;}
+}
+
+/* input */
+.input { display:flex; padding:10px; }
+textarea { resize:none; overflow:hidden; flex:1; }
+
+/* emoji */
+#emojiBox { display:none; padding:10px; }
+</style>
+</head>
+
+<body>
+
+<div id="auth">
+  <h2>🌌 InnerSpace</h2>
+  <input id="u" placeholder="Username">
+
+  <div style="position:relative;">
+    <input id="p" type="password" placeholder="Password">
+    <span onclick="togglePass()" style="position:absolute; right:10px; top:15px; cursor:pointer;">👁️</span>
+  </div>
+
+  <button onclick="signup()">Signup</button>
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="app">
+  <div class="header">
+    InnerSpace
+    <button onclick="logout()" style="float:right;">Logout</button>
+  </div>
+
+  <div id="messages" class="messages"></div>
+
+  <div class="input">
+    <textarea id="msg"></textarea>
+    <button onclick="send()">Send</button>
+    <button onclick="toggleEmoji()">😀</button>
+  </div>
+
+  <div id="emojiBox">
+    😀 😂 😍 😭 😡 👍 ❤️ 🔥
+  </div>
+</div>
+
+<script>
+
+/* 🔊 SEND SOUND */
+const sendSound = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3");
+
+/* UI */
+function showApp(){
+  auth.style.display="none";
+  app.style.display="flex";
+}
+
+function getTime(){
+  let d=new Date();
+  return d.getHours()+":"+d.getMinutes().toString().padStart(2,'0');
+}
+
+/* PASSWORD */
+function togglePass(){
+  p.type = p.type==="password"?"text":"password";
+}
+
+/* ADD MESSAGE (NO FLICKER) */
+function addMsg(text,type){
+  let id=Date.now();
+
+  let row=document.createElement("div");
+  row.className="row "+type;
+  row.id="msg-"+id;
+
+  let bubble=document.createElement("div");
+  bubble.className="bubble";
+
+  bubble.innerHTML=`
+    ${text}
+    <div class="time">${getTime()}</div>
+    <div class="reactions">
+      <span onclick="react(${id},'❤️')">❤️</span>
+      <span onclick="react(${id},'😂')">😂</span>
+      <span onclick="delMsg(${id})">🗑️</span>
+    </div>
+  `;
+
+  row.appendChild(bubble);
+  messages.appendChild(row);
+
+  messages.scrollTo({
+    top: messages.scrollHeight,
+    behavior: "smooth"
+  });
+}
+
+/* REACTION */
+function react(id,emoji){
+  document.querySelector(`#msg-${id} .reactions`).innerHTML += emoji;
+}
+
+/* DELETE */
+function delMsg(id){
+  document.getElementById("msg-"+id).remove();
+}
+
+/* EMOJI */
+function toggleEmoji(){
+  emojiBox.style.display = emojiBox.style.display==="none"?"block":"none";
+}
+
+emojiBox.addEventListener("click",e=>{
+  msg.value += e.target.textContent;
+});
+
+/* AUTH */
+async function signup(){
+  await fetch("http://127.0.0.1:5000/signup",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username:u.value,password:p.value})
+  });
+  alert("Signup done");
+}
+
+async function login(){
+  let res=await fetch("http://127.0.0.1:5000/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username:u.value,password:p.value}),
+    credentials:"include"
+  });
+
+  let d=await res.json();
+
+  if(d.msg){
+    showApp();
+    loadHistory();
+  } else alert("Login failed");
+}
+
+async function logout(){
+  await fetch("http://127.0.0.1:5000/logout",{method:"POST",credentials:"include"});
+  location.reload();
+}
+
+/* CHAT */
+async function send(){
+  let text=msg.value.trim();
+  if(!text) return;
+
+  sendSound.play(); // 🔊 sound
+
+  addMsg(text,"user");
+
+  msg.value="";
+  msg.style.height="auto";
+
+  let typingRow=document.createElement("div");
+  typingRow.className="row bot";
+  typingRow.id="typing";
+
+  typingRow.innerHTML=`
+    <div class="bubble typing">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+  `;
+
+  messages.appendChild(typingRow);
+
+  let res=await fetch("http://127.0.0.1:5000/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:text}),
+    credentials:"include"
+  });
+
+  let data=await res.json();
+
+  document.getElementById("typing").remove();
+
+  addMsg(data.reply,"bot");
+}
+
+/* HISTORY */
+async function loadHistory(){
+  let res=await fetch("http://127.0.0.1:5000/history",{credentials:"include"});
+  let data=await res.json();
+
+  messages.innerHTML="";
+  data.forEach(d=>{
+    addMsg(d[1], d[0]=="user"?"user":"bot");
+  });
+}
+
+/* SESSION */
+async function check(){
+  let res=await fetch("http://127.0.0.1:5000/me",{credentials:"include"});
+  let d=await res.json();
+
+  if(d.user_id){
+    showApp();
+    loadHistory();
+  }
+}
+check();
+
+/* ENTER */
+msg.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !e.shiftKey){
+    e.preventDefault();
+    send();
+  }
+});
+
+/* AUTO EXPAND */
+msg.addEventListener("input",function(){
+  this.style.height="auto";
+  this.style.height=this.scrollHeight+"px";
+});
+
+/* LOGIN ENTER */
+p.addEventListener("keypress",e=>{
+  if(e.key==="Enter") login();
+});
+
+</script>
+
+</body>
+</html>
