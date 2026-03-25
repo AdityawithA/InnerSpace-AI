@@ -220,7 +220,7 @@ emojiBox.addEventListener("click",e=>{
 
 /* AUTH */
 async function signup(){
-  await fetch("http://127.0.0.1:5000/signup",{
+  await fetch("/signup",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({username:u.value,password:p.value})
@@ -229,7 +229,7 @@ async function signup(){
 }
 
 async function login(){
-  let res=await fetch("http://127.0.0.1:5000/login",{
+  let res=await fetch("/login",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({username:u.value,password:p.value}),
@@ -245,7 +245,7 @@ async function login(){
 }
 
 async function logout(){
-  await fetch("http://127.0.0.1:5000/logout",{method:"POST",credentials:"include"});
+  await fetch("/logout",{method:"POST",credentials:"include"});
   location.reload();
 }
 
@@ -275,7 +275,7 @@ async function send(){
 
   messages.appendChild(typingRow);
 
-  let res=await fetch("http://127.0.0.1:5000/chat",{
+  let res=await fetch("/chat",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({message:text}),
@@ -291,7 +291,7 @@ async function send(){
 
 /* HISTORY */
 async function loadHistory(){
-  let res=await fetch("http://127.0.0.1:5000/history",{credentials:"include"});
+  let res=await fetch("/history",{credentials:"include"});
   let data=await res.json();
 
   messages.innerHTML="";
@@ -302,7 +302,7 @@ async function loadHistory(){
 
 /* SESSION */
 async function check(){
-  let res=await fetch("http://127.0.0.1:5000/me",{credentials:"include"});
+  let res=await fetch("/me",{credentials:"include"});
   let d=await res.json();
 
   if(d.user_id){
