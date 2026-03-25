@@ -8,12 +8,19 @@ app = Flask(__name__)
 app.secret_key = "test_secret_key"
 CORS(app, supports_credentials=True)
 
+
+# ================= HOME =================
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# 🔑 PUT YOUR NEW WORKING API KEY HERE
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+# ================= GROQ CLIENT =================
+def get_groq_client():
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise Exception("GROQ_API_KEY not set")
+    return Groq(api_key=api_key)
 
 
 # ================= DB SETUP =================
@@ -165,23 +172,29 @@ def chat():
     # 💾 Save user message
     save_message(user_id, "user", user_input)
 
-    # 🧠 AI call
-    response = client.chat.completions.create(
-       model="llama-3.1-8b-instant",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a kind emotional support AI. Keep responses short, natural, and supportive."
-            },
-            {
-                "role": "user",
-                "content": user_input
-            }
-        ],
-        temperature=0.7
-    )
+    try:
+        client = get_groq_client()
 
-    reply = response.choices[0].message.content
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",  # ✅ stable model
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a kind emotional support AI. Keep responses short, natural, and supportive."
+                },
+                {
+                    "role": "user",
+                    "content": user_input
+                }
+            ],
+            temperature=0.7
+        )
+
+        reply = response.choices[0].message.content
+
+    except Exception as e:
+        print("ERROR:", str(e))  # 👈 shows in Render logs
+        reply = "⚠️ AI is temporarily unavailable. Please try again."
 
     # 💾 Save bot reply
     save_message(user_id, "bot", reply)
@@ -196,7 +209,6 @@ def history():
         return jsonify([])
 
     user_id = session["user_id"]
-
     data = get_history(user_id)
 
     return jsonify(data)
@@ -204,6 +216,5 @@ def history():
 
 # ================= RUN =================
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
