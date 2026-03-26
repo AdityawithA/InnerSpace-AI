@@ -1,4 +1,5 @@
 print("🔥 THIS IS NEW CODE VERSION 🔥")
+
 import traceback
 from flask import Flask, request, jsonify, session, render_template
 from flask_cors import CORS
@@ -20,7 +21,7 @@ def home():
 # ================= GROQ CLIENT =================
 def get_groq_client():
     api_key = os.getenv("GROQ_API_KEY")
-    print("API KEY LOADED:", api_key)  # 🔥 DEBUG
+    print("API KEY LOADED:", api_key)
 
     if not api_key:
         raise Exception("GROQ_API_KEY not set")
@@ -166,26 +167,24 @@ def chat():
     if not user_input:
         return jsonify({"reply": "Say something..."})
 
-    # 🚨 Safety
     if safety_check(user_input):
         return jsonify({
             "reply": "I'm really sorry you're feeling this way. Please talk to someone you trust ❤️"
         })
 
-    # 💾 Save user message
     save_message(user_id, "user", user_input)
 
     try:
         client = get_groq_client()
 
-        print("Making request to Groq...")  # 🔥 DEBUG
+        print("Making request to Groq...")
 
         response = client.chat.completions.create(
-            model="llama3-8b-8192",  # ✅ safe model
+            model="llama3-8b-8192",
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a kind emotional support AI. Keep responses short and supportive."
+                    "content": "You are a kind emotional support AI."
                 },
                 {
                     "role": "user",
@@ -195,19 +194,16 @@ def chat():
             temperature=0.7
         )
 
-        print("Groq response received")  # 🔥 DEBUG
+        print("Groq response received")
 
-        reply = "Backend working perfectly 🔥"
+        reply = response.choices[0].message.content
 
-   
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            "reply": f"ERROR: {str(e)}"
+        })
 
-except Exception as e:
-    traceback.print_exc()  # 👈 shows full error in logs
-    return jsonify({
-        "reply": f"ERROR: {str(e)}"
-    })
-
-    # 💾 Save bot reply
     save_message(user_id, "bot", reply)
 
     return jsonify({"reply": reply})
