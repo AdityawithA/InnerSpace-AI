@@ -1,3 +1,4 @@
+print("🔥 THIS IS NEW CODE VERSION 🔥")
 from flask import Flask, request, jsonify, session, render_template
 from flask_cors import CORS
 from groq import Groq
