@@ -199,7 +199,7 @@ def chat():
 
         reply = "Backend working perfectly 🔥"
 
-   import traceback
+   
 
 except Exception as e:
     traceback.print_exc()  # 👈 shows full error in logs
