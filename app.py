@@ -1,4 +1,5 @@
 print("🔥 THIS IS NEW CODE VERSION 🔥")
+import traceback
 from flask import Flask, request, jsonify, session, render_template
 from flask_cors import CORS
 from groq import Groq
@@ -198,9 +199,13 @@ def chat():
 
         reply = "Backend working perfectly 🔥"
 
-    except Exception as e:
-        print("ERROR:", str(e))  # 🔥 VERY IMPORTANT
-        reply = "⚠️ AI is temporarily unavailable. Please try again."
+   import traceback
+
+except Exception as e:
+    traceback.print_exc()  # 👈 shows full error in logs
+    return jsonify({
+        "reply": f"ERROR: {str(e)}"
+    })
 
     # 💾 Save bot reply
     save_message(user_id, "bot", reply)
