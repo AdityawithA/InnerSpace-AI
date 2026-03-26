@@ -21,13 +21,16 @@ def home():
 # ================= GROQ CLIENT =================
 def get_groq_client():
     api_key = os.getenv("GROQ_API_KEY")
+
+    if api_key:
+        api_key = api_key.strip()  # 🔥 THIS FIXES EVERYTHING
+
     print("API KEY LOADED:", api_key)
 
     if not api_key:
         raise Exception("GROQ_API_KEY not set")
 
     return Groq(api_key=api_key)
-
 
 # ================= DB SETUP =================
 def init_db():
